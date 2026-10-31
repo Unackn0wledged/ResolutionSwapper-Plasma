@@ -1,0 +1,21 @@
+{
+    "KPackageStructure": "Plasma/Applet",
+    "KPlugin": {
+        "Authors": [
+            {
+                "Name": "Unackn0wledged"
+            }
+        ],
+        "Category": "Utilities",
+        "Description": "Switch the main monitor between two resolutions",
+        "Icon": "video-display",
+        "Id": "com.github.unackn0wledged.resolutionswapper",
+        "License": "MIT",
+        "Name": "Resolution Swapper",
+        "Version": "1.0.0",
+        "Website": "https://github.com/Unackn0wledged/ResolutionSwapper-Plasma"
+    },
+    "X-Plasma-API-Minimum-Version": "6.0",
+    "X-Plasma-NotificationArea": "true",
+    "X-Plasma-NotificationAreaCategory": "Hardware"
+}
