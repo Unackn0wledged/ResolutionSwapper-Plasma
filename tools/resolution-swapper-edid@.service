@@ -1,0 +1,13 @@
+[Unit]
+Description=Load custom EDID for %i
+Documentation=https://github.com/Unackn0wledged/ResolutionSwapper-Plasma
+After=systemd-modules-load.service sys-kernel-debug.mount
+Before=display-manager.service
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+ExecStart=/usr/local/bin/resolution-swapper-load-edid %i
+
+[Install]
+WantedBy=graphical.target

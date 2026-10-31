@@ -100,6 +100,63 @@ Custom modes use reduced blanking. To remove one you kept, list them with
 kscreen-doctor output.DP-2.removeCustomMode.0
 ```
 
+### NVIDIA
+
+**Add** can't work with NVIDIA's driver, at any refresh rate. The driver only
+accepts modes listed in the monitor's EDID, so KWin gets
+`The driver rejected the output configuration` and the widget removes the mode
+again. The monitor isn't the problem, and lowering the refresh rate won't help.
+
+The way around this is to add the resolution to the EDID the driver sees. This
+worked on a 34" LG UltraGear with driver 615.78, but it depends on the monitor
+accepting a resolution it never advertised.
+
+`tools/add-edid-mode.py` writes a copy of your EDID with the new resolution added.
+It only reads the monitor and needs no root. It needs `edid-decode`, and it requires
+a resolution with the same height as a mode the monitor already has:
+
+```bash
+mkdir -p edid
+./tools/add-edid-mode.py DP-2 2560x1440 edid/DP-2.bin
+```
+
+The generated file contains your monitor's serial number. `*.bin` is ignored by
+git here, so keep it that way if you share the folder.
+
+To try it, load the file as a temporary override. This lasts until the next reboot,
+so a reboot undoes it:
+
+```bash
+sudo sh -c 'd=$(ls -d /sys/kernel/debug/dri/*/DP-2 | head -1); [ -n "$d" ] && cat edid/DP-2.bin > "$d/edid_override" && echo detect > /sys/class/drm/card*-DP-2/status'
+```
+
+KWin doesn't rescan a connector that's already running, so make it pick up the new
+modes by turning the monitor off and on, or by logging out and back in.
+
+Modes added this way count as normal modes, so the widget switches to them directly,
+without a 15 second trial. If the picture is black, use the widget or
+`kscreen-doctor` from another monitor to switch back, then reboot to clear the
+override.
+
+An EDID override has been reported to disable HDR or VRR on some setups. Both stayed
+available on the LG above, but check yours if you use them.
+
+To keep the override after a reboot, install it as a boot service:
+
+```bash
+sudo tools/install-edid-override.sh DP-2 edid/DP-2.bin
+```
+
+This copies the EDID to `/etc/resolution-swapper` and leaves the kernel command line
+and initramfs alone. If the service fails, the monitor simply uses its normal EDID.
+It also skips the override if a different monitor is on that connector.
+
+To remove it, run this and reboot:
+
+```bash
+sudo tools/install-edid-override.sh --remove DP-2
+```
+
 ## How it works
 
 The widget is plain QML with no compiled code. It reads the setup from
@@ -132,6 +189,8 @@ QT_QPA_PLATFORM=offscreen /usr/lib/qt6/bin/qmltestrunner -input tests
 **"Could not read the monitor setup".** Check that `kscreen-doctor -j` works in a
 terminal. If the command is missing, install `libkscreen`.
 
+**"The graphics driver refused" a custom mode.** See [NVIDIA](#nvidia).
+
 **The monitor went black after adding a mode.** Wait for the trial to end, which
 takes at most 15 seconds. The monitor doesn't support that mode, so try a lower
 refresh rate.
@@ -139,8 +198,10 @@ refresh rate.
 **Windows moved after switching.** KWin rearranges windows when a monitor changes
 size. This isn't specific to the widget.
 
-**The image is stretched to fill the monitor.** Scaling at non-native resolutions is
-done by the monitor. Look for an aspect ratio option in its on-screen menu.
+**The image is stretched to fill the monitor, or looks soft.** Scaling at non-native
+resolutions is done by the monitor. With the resolution active, look for an aspect
+ratio option in its on-screen menu. On an LG ultrawide, setting **Ratio** to
+**Original** gives a sharp 16:9 picture with black bars.
 
 ## License
 

@@ -141,7 +141,8 @@ PlasmoidItem {
         applyMode(preset.mode, succeeded => {
             if (!succeeded) {
                 removeCustomMode(customIndex, () => {
-                    fail(i18n("The main monitor could not use %1, so the custom mode was removed.", formatPreset(preset)));
+                    fail(i18n("The graphics driver refused %1, so the custom mode was removed. NVIDIA drivers only accept modes listed in the monitor's EDID. The README explains how to add one there.",
+                              formatPreset(preset)));
                 });
                 return;
             }
